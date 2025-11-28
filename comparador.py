@@ -239,7 +239,7 @@ if st.button("Comparar contratos", use_container_width=True):
 
                 if sin_diferencias:
                     st.info("🟦 Sin diferencias relevantes en el contrato.")
-                    st.json(sin_diferencias)
+                    #st.json(sin_diferencias)
 
                 elif diferencias:
                     st.success(f"✅ Se detectaron {len(diferencias)} diferencias.")
