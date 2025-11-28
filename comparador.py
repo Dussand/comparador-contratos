@@ -151,14 +151,14 @@ with col2:
 if contrato_base:
     texto_base = extraer_texto(contrato_base)
     st.subheader("📘 Texto del contrato BASE:")
-    st.text_area("Contenido base", texto_base, height=250)
+    st.text_area("Contenido base", texto_base, height=150)
 else:
     texto_base = ""
 
 if contrato_mod:
     texto_mod = extraer_texto(contrato_mod)
     st.subheader("📕 Texto del contrato MODIFICADO:")
-    st.text_area("Contenido modificado", texto_mod, height=250)
+    st.text_area("Contenido modificado", texto_mod, height=150)
 else:
     texto_mod = ""
 
