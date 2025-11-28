@@ -11,8 +11,8 @@ st.set_page_config(page_title="Comparador de Contratos", page_icon="📄")
 st.title("📄 Comparador de Contratos – Kashio Legal")
 
 # URL del webhook (usa la de producción si ya activaste el flujo)
-N8N_WEBHOOK_URL = "http://localhost:5678/webhook-test/compare_contracts"
-#N8N_WEBHOOK_URL_CORREO = "http://localhost:5678/webhook-test/3ac6a28b-3905-44d2-9780-cad7fbcff869"
+N8N_WEBHOOK_URL = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
+#N8N_WEBHOOK_URL_CORREO = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
 
 
 # ---------- FUNCIONES ----------
@@ -164,97 +164,120 @@ else:
 
 if st.button("Comparar contratos", use_container_width=True):
 
-
     if not (contrato_base and contrato_mod):
         st.warning("Por favor sube ambos contratos antes de continuar.")
     else:
 
         nombre_base = os.path.splitext(contrato_base.name)[0]
         nombre_mod = os.path.splitext(contrato_mod.name)[0]
-        with st.spinner("Comparando"):
-            try:
-                # Payload para el webhook
-                payload = {"contrato_a": texto_base, "contrato_b": texto_mod, 'contrato_aName': nombre_base}
+        
+        # ✅ BARRA DE PROGRESO
+        progress_bar = st.progress(0)
+        status_text = st.empty()
 
-                response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=600)
+        try:
+            status_text.text("🔍 Analizando diferencias...")
+            progress_bar.progress(30)
+            
+            # Payload para el webhook
+            payload = {"contrato_a": texto_base, "contrato_b": texto_mod, 'contrato_aName': nombre_base}
 
-                if response.ok:
-                    data = response.json()
+            status_text.text("🔍 Analizando diferencias...")
+            progress_bar.progress(60)
+            
+            response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=600)
 
-                    # ---------------------------------------------
-                    # INTERPRETACIÓN FLEXIBLE DE RESPUESTA
-                    # ---------------------------------------------
-                    # Detectar formato flexible según la nueva salida
-                    diferencias = []
-                    sin_diferencias = None
+            status_text.text("✅ Procesando resultados...")
+            progress_bar.progress(90)
 
-                    # Caso A: lista → diferencias posibles
-                    if isinstance(data, list):
-                        # Filtrar solo items que tengan tipo_cambio
-                        diferencias = [d for d in data if d.get("tipo_cambio")]
+            if response.ok:
+                progress_bar.progress(100)
+                time.sleep(0.3)  # Pausa breve para que se vea el 100%
+                progress_bar.empty()
+                status_text.empty()
+                
+                data = response.json()
+
+                # ---------------------------------------------
+                # INTERPRETACIÓN FLEXIBLE DE RESPUESTA
+                # ---------------------------------------------
+                # Detectar formato flexible según la nueva salida
+                diferencias = []
+                sin_diferencias = None
+
+                # Caso A: lista → diferencias posibles
+                if isinstance(data, list):
+                    # Filtrar solo items que tengan tipo_cambio
+                    diferencias = [d for d in data if d.get("tipo_cambio")]
+                    if not diferencias:
+                        # Si no hay tipo_cambio → se trata como sin diferencias
+                        sin_diferencias = {"impacto_global": "Sin cambios"}
+
+                # Caso B: un objeto → revisar impacto_global
+                elif isinstance(data, dict):
+
+                    # Caso "sin diferencias relevantes"
+                    if data.get("tipo_cambio") == "Sin cambios":
+                        sin_diferencias = data
+
+                    # Caso {"data": [ ... ]}
+                    elif isinstance(data.get("data"), list):
+                        diferencias = [d for d in data["data"] if d.get("tipo_cambio")]
                         if not diferencias:
-                            # Si no hay tipo_cambio → se trata como sin diferencias
-                            sin_diferencias = {"impacto_global": "Sin cambios"}
-
-                    # Caso B: un objeto → revisar impacto_global
-                    elif isinstance(data, dict):
-
-                        # Caso “sin diferencias relevantes”
-                        if data.get("tipo_cambio") == "Sin cambios":
                             sin_diferencias = data
 
-                        # Caso {"data": [ ... ]}
-                        elif isinstance(data.get("data"), list):
-                            diferencias = [d for d in data["data"] if d.get("tipo_cambio")]
-                            if not diferencias:
-                                sin_diferencias = data
+                    # Caso {"data": { ... }}
+                    elif isinstance(data.get("data"), dict):
+                        if data["data"].get("tipo_cambio"):
+                            diferencias = [data["data"]]
+                        else:
+                            sin_diferencias = data["data"]
 
-                        # Caso {"data": { ... }}
-                        elif isinstance(data.get("data"), dict):
-                            if data["data"].get("tipo_cambio"):
-                                diferencias = [data["data"]]
-                            else:
-                                sin_diferencias = data["data"]
+                # ---------------------------------------
+                # MOSTRAR RESULTADOS
+                # ---------------------------------------
 
-                    # ---------------------------------------
-                    # MOSTRAR RESULTADOS
-                    # ---------------------------------------
+                if sin_diferencias:
+                    st.info("🟦 Sin diferencias relevantes en el contrato.")
+                    st.json(sin_diferencias)
 
-                    if sin_diferencias:
-                        st.info("🟦 Sin diferencias relevantes en el contrato.")
-                        st.json(sin_diferencias)
+                elif diferencias:
+                    st.success(f"✅ Se detectaron {len(diferencias)} diferencias.")
+                    st.dataframe(pd.DataFrame(diferencias), use_container_width=True)
 
-                    elif diferencias:
-                        st.success(f"✅ Se detectaron {len(diferencias)} diferencias.")
-                        st.dataframe(pd.DataFrame(diferencias), use_container_width=True)
-
-                        # generar_correo = st.button("💬 Generar correo", use_container_width=True)
+                    # generar_correo = st.button("💬 Generar correo", use_container_width=True)
 
 
-                        # if generar_correo:
-                        #     payload_correo = {
-                        #         "nombre_contrato_mod": nombre_mod,
-                        #         "cliente": diferencias[0].get("cliente", "Cliente"),
-                        #         "diferencias": diferencias,
-                        #     }
+                    # if generar_correo:
+                    #     payload_correo = {
+                    #         "nombre_contrato_mod": nombre_mod,
+                    #         "cliente": diferencias[0].get("cliente", "Cliente"),
+                    #         "diferencias": diferencias,
+                    #     }
 
-                        #     response_correo = requests.post(N8N_WEBHOOK_URL_CORREO, json=payload_correo).json()
+                    #     response_correo = requests.post(N8N_WEBHOOK_URL_CORREO, json=payload_correo).json()
 
-                        #     correo_generado = response_correo["correo"]
+                    #     correo_generado = response_correo["correo"]
 
-                        #     # ------------------------------
-                        #     # EFECTO TYPING AQUÍ 🔥🔥
-                        #     # ------------------------------
-                        #     typing_effect(correo_generado, speed=0.003)
-
-                    else:
-                        st.warning("⚠️ Respuesta no válida o inesperada.")
-
+                    #     # ------------------------------
+                    #     # EFECTO TYPING AQUÍ 🔥🔥
+                    #     # ------------------------------
+                    #     typing_effect(correo_generado, speed=0.003)
 
                 else:
-                    st.error(f"❌ Error {response.status_code}: {response.text}")
+                    st.warning("⚠️ Respuesta no válida o inesperada.")
 
-            except requests.Timeout:
-                st.error("⏱️ Tiempo de espera excedido. Intenta nuevamente.")
-            except Exception as e:
-                st.error(f"❌ Error inesperado: {e}")
+
+            else:
+                progress_bar.empty()
+                status_text.empty()
+                st.error(f"❌ Error {response.status_code}: {response.text}")
+
+        except requests.Timeout:
+            progress_bar.empty()
+            status_text.empty()
+            st.error("⏱️ Tiempo de espera excedido. Intenta nuevamente.")
+        except Exception as e:
+            progress_bar.empty()
+            status_text.empty()
+            st.error(f"❌ Error inesperado: {e}")
