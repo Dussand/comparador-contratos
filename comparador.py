@@ -5,6 +5,7 @@ from io import BytesIO, StringIO
 from docx import Document
 import time
 import os
+import PyPDF2
 
 
 st.set_page_config(page_title="Comparador de Contratos", page_icon="📄")
@@ -42,17 +43,37 @@ def leer_docx(file):
     # 3️⃣ Unir todo en un solo bloque de texto
     return "\n".join(texto)
 
+
+def leer_pdf(file):
+    """Lee un archivo PDF y extrae texto página por página."""
+    reader = PyPDF2.PdfReader(BytesIO(file.getvalue()))
+    texto = []
+
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            texto.append(page_text)
+
+    return "\n".join(texto)
+
 def extraer_texto(file):
-    """Detecta el tipo de archivo y obtiene el texto."""
+    """Detecta el tipo de archivo y devuelve texto limpio."""
     if file is None:
         return ""
-    if file.name.endswith(".txt"):
+
+    nombre = file.name.lower()
+
+    if nombre.endswith(".txt"):
         return leer_txt(file)
-    elif file.name.endswith(".docx"):
+
+    elif nombre.endswith(".docx"):
         return leer_docx(file)
+
+    elif nombre.endswith(".pdf"):
+        return leer_pdf(file)
+
     else:
-        return "⚠️ Formato no soportado (usa .docx o .txt)"
-    
+        return "⚠️ Formato no soportado (usa .docx, .txt o .pdf)"
 #----------GENERACION DE CORREO------------
 
 def typing_effect(text, speed=0.003):
@@ -144,9 +165,9 @@ def typing_effect(text, speed=0.003):
 # ---------- CARGA DE ARCHIVOS ----------
 col1, col2 = st.columns(2)
 with col1:
-    contrato_base = st.file_uploader("Contrato base", type=["docx", "txt"])
+    contrato_base = st.file_uploader("Contrato base", type=["docx", "txt", "PDF"])
 with col2:
-    contrato_mod = st.file_uploader("Contrato modificado", type=["docx", "txt"])
+    contrato_mod = st.file_uploader("Contrato modificado", type=["docx", "txt", "PDF"])
 
 # ---------- VISTA PREVIA ----------
 if contrato_base:
