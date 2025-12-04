@@ -11,8 +11,9 @@ st.set_page_config(page_title="Comparador de Contratos", page_icon="📄")
 st.title("📄 Comparador de Contratos – Kashio Legal")
 
 # URL del webhook (usa la de producción si ya activaste el flujo)
-N8N_WEBHOOK_URL = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
-#N8N_WEBHOOK_URL_CORREO = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
+N8N_WEBHOOK_URL_PRODUCTION = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
+#N8N_WEBHOOK_URL_TEST = 'http://localhost:5678/webhook-test/compare_contracts'
+#N8N_WEBHOOK_URL_PRODUCTION_CORREO = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
 
 
 # ---------- FUNCIONES ----------
@@ -100,7 +101,7 @@ def typing_effect(text, speed=0.003):
 #             try:
 #                 # Enviar el texto procesado en formato JSON
 #                 payload = {"contrato_marco": text_contratoMarco, "servicio_esp": text_servicioEspecifico}
-#                 response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=600)
+#                 response = requests.post(N8N_WEBHOOK_URL_PRODUCTION, json=payload, timeout=600)
 
 #                 if response.ok:
 #                     data = response.json()
@@ -185,7 +186,7 @@ if st.button("Comparar contratos", use_container_width=True):
             status_text.text("🔍 Analizando diferencias...")
             progress_bar.progress(60)
             
-            response = requests.post(N8N_WEBHOOK_URL, json=payload, timeout=600)
+            response = requests.post(N8N_WEBHOOK_URL_PRODUCTION, json=payload, timeout=600)
 
             status_text.text("✅ Procesando resultados...")
             progress_bar.progress(90)
@@ -255,7 +256,7 @@ if st.button("Comparar contratos", use_container_width=True):
                     #         "diferencias": diferencias,
                     #     }
 
-                    #     response_correo = requests.post(N8N_WEBHOOK_URL_CORREO, json=payload_correo).json()
+                    #     response_correo = requests.post(N8N_WEBHOOK_URL_PRODUCTION_CORREO, json=payload_correo).json()
 
                     #     correo_generado = response_correo["correo"]
 
