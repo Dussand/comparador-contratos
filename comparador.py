@@ -6,18 +6,19 @@ from docx import Document
 import time
 import os
 import PyPDF2
-
+from pdf2docx import Converter
+import tempfile
 
 st.set_page_config(page_title="Comparador de Contratos", page_icon="📄")
 st.title("📄 Comparador de Contratos – Kashio Legal")
 
 # URL del webhook (usa la de producción si ya activaste el flujo)
 N8N_WEBHOOK_URL_PRODUCTION = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
-#N8N_WEBHOOK_URL_TEST = 'http://localhost:5678/webhook-test/compare_contracts'
+N8N_WEBHOOK_URL_TEST = 'http://localhost:5678/webhook-test/compare_contracts'
 #N8N_WEBHOOK_URL_PRODUCTION_CORREO = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
 
 
-# ---------- FUNCIONES ----------
+# ---------- FUNCIONES ---------https://operationskashio.app.n8n.cloud/webhook/compare_contracts
 def leer_txt(file):
     """Lee archivos de texto plano (.txt)."""
     return file.getvalue().decode("utf-8")
@@ -42,7 +43,6 @@ def leer_docx(file):
 
     # 3️⃣ Unir todo en un solo bloque de texto
     return "\n".join(texto)
-
 
 def leer_pdf(file):
     """Lee un archivo PDF y extrae texto página por página."""
@@ -173,14 +173,14 @@ with col2:
 if contrato_base:
     texto_base = extraer_texto(contrato_base)
     st.subheader("📘 Texto del contrato BASE:")
-    st.text_area("Contenido base", texto_base, height=150)
+    st.text_area("Contenido base", texto_base, height=350)
 else:
     texto_base = ""
 
 if contrato_mod:
     texto_mod = extraer_texto(contrato_mod)
     st.subheader("📕 Texto del contrato MODIFICADO:")
-    st.text_area("Contenido modificado", texto_mod, height=150)
+    st.text_area("Contenido modificado", texto_mod, height=350)
 else:
     texto_mod = ""
 
