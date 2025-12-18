@@ -6,8 +6,7 @@ from docx import Document
 import time
 import os
 import PyPDF2
-from pdf2docx import Converter
-import tempfile
+
 
 st.set_page_config(page_title="Comparador de Contratos", page_icon="📄")
 st.title("📄 Comparador de Contratos – Kashio Legal")
