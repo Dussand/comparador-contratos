@@ -13,7 +13,7 @@ st.title("📄 Comparador de Contratos – Kashio Legal")
 
 # URL del webhook (usa la de producción si ya activaste el flujo)
 N8N_WEBHOOK_URL_PRODUCTION = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
-N8N_WEBHOOK_URL_TEST = 'http://localhost:5678/webhook-test/compare_contracts'
+N8N_WEBHOOK_URL_TEST = 'https://operationskashio.app.n8n.cloud/webhook-test/compare_contracts'
 #N8N_WEBHOOK_URL_PRODUCTION_CORREO = "https://operationskashio.app.n8n.cloud/webhook/compare_contracts"
 
 
@@ -206,7 +206,7 @@ if st.button("Comparar contratos", use_container_width=True):
             status_text.text("🔍 Analizando diferencias...")
             progress_bar.progress(60)
             
-            response = requests.post(N8N_WEBHOOK_URL_PRODUCTION, json=payload, timeout=600)
+            response = requests.post(N8N_WEBHOOK_URL_TEST, json=payload, timeout=600)
 
             status_text.text("✅ Procesando resultados...")
             progress_bar.progress(90)
@@ -302,3 +302,19 @@ if st.button("Comparar contratos", use_container_width=True):
             progress_bar.empty()
             status_text.empty()
             st.error(f"❌ Error inesperado: {e}")
+
+# ---------- INFORMACIÓN ----------
+
+with st.sidebar:
+    st.header("ℹ️ Información")
+    st.markdown("""
+    ### Cómo usar:
+    1. Sube el **contrato base** (original)
+    2. Sube el **contrato modificado** (nuevo)
+    3. Click en **Comparar Contratos**
+    
+    ### Formatos soportados:
+    - PDF (.pdf)
+    - Word (.docx)
+    - Texto plano (.txt)
+    """)
